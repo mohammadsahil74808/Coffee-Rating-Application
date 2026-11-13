@@ -21,3 +21,4 @@ export const triggerVoteConfetti = (event) => {
     shapes: ['circle', 'square']
   });
 };
+
