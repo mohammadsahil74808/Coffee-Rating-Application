@@ -166,3 +166,4 @@ export const CoffeeIllustration = ({ type = 'beans', className }) => {
       return <CoffeeBeanIllustration className={className} />;
   }
 };
+

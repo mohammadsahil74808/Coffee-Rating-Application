@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import CoffeeRowItem from './components/CoffeeRowItem';
-import FlowInspector from './components/FlowInspector';
 import CoffeeDetailModal from './components/CoffeeDetailModal';
 import AddCoffeeModal from './components/AddCoffeeModal';
 import Toast from './components/Toast';
 import { coffeeApi, checkBackendConnection } from './services/api';
 import { isSoundEnabled, toggleSound } from './utils/sound';
-import { Coffee, Plus, RotateCcw, Volume2, VolumeX, Database, Search, Sparkles, Filter, Code2, CheckCircle2 } from 'lucide-react';
+import { Coffee, Plus, RotateCcw, Volume2, VolumeX, Database, Search, Sparkles, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [coffees, setCoffees] = useState([]);
@@ -17,9 +16,8 @@ export default function App() {
   // Filter & Search states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [lastVotedCoffee, setLastVotedCoffee] = useState(null);
-  const [isVotingState, setIsVotingState] = useState(false);
-  const [showInspector, setShowInspector] = useState(true);
+  const [sortBy, setSortBy] = useState('votes');
+  const [selectedCoffeeId, setSelectedCoffeeId] = useState(4); // Default highlighted coffee (Vanilla Latte)
 
   // Modals & Toast
   const [activeModalCoffee, setActiveModalCoffee] = useState(null);
@@ -47,9 +45,6 @@ export default function App() {
 
       const res = await coffeeApi.getAll();
       setCoffees(res.data || []);
-      if (res.data && res.data.length > 0 && !lastVotedCoffee) {
-        setLastVotedCoffee(res.data[3] || res.data[0]); // Default to Vanilla Latte like reference photo
-      }
     } catch (err) {
       console.error('Failed to load data:', err);
       showToast('Error connecting to database', 'warning');
@@ -64,15 +59,13 @@ export default function App() {
 
   // Handle voting with instant optimistic update
   const handleVote = async (coffeeId) => {
-    setIsVotingState(true);
+    setSelectedCoffeeId(coffeeId);
 
     // 1. Optimistic UI update
     setCoffees(prev =>
       prev.map(c => {
         if (c.id === coffeeId) {
-          const updated = { ...c, votes: c.votes + 1 };
-          setLastVotedCoffee(updated);
-          return updated;
+          return { ...c, votes: c.votes + 1 };
         }
         return c;
       })
@@ -85,8 +78,7 @@ export default function App() {
         setCoffees(prev =>
           prev.map(c => (c.id === coffeeId ? res.data : c))
         );
-        setLastVotedCoffee(res.data);
-        showToast(`Vote committed for "${res.data.name}" in database! ☕`, 'success');
+        showToast(`Vote recorded for "${res.data.name}"! ☕`, 'success');
       }
     } catch (err) {
       console.error('Vote failed:', err);
@@ -95,29 +87,27 @@ export default function App() {
       setCoffees(prev =>
         prev.map(c => (c.id === coffeeId ? { ...c, votes: Math.max(0, c.votes - 1) } : c))
       );
-    } finally {
-      setTimeout(() => setIsVotingState(false), 800);
     }
   };
 
   // Add coffee
   const handleAddCoffee = async (formData) => {
     const res = await coffeeApi.addCoffee(formData);
-    showToast(`"${formData.name}" added to database!`, 'success');
+    showToast(`"${formData.name}" added to menu!`, 'success');
     loadData();
     return res;
   };
 
   // Reset database
   const handleResetDb = async () => {
-    if (window.confirm('Reset database back to the original tutorial coffee items?')) {
+    if (window.confirm('Reset all vote counts to initial tutorial values?')) {
       await coffeeApi.reset();
-      showToast('Database reset and re-seeded successfully.', 'info');
+      showToast('Database reset successfully.', 'info');
       loadData();
     }
   };
 
-  // Filtered coffees
+  // Filtered and sorted coffees
   const filteredCoffees = useMemo(() => {
     let list = [...coffees];
 
@@ -134,8 +124,14 @@ export default function App() {
       );
     }
 
+    list.sort((a, b) => {
+      if (sortBy === 'votes') return (b.votes || 0) - (a.votes || 0);
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return 0;
+    });
+
     return list;
-  }, [coffees, selectedCategory, searchTerm]);
+  }, [coffees, selectedCategory, searchTerm, sortBy]);
 
   // Total community votes
   const totalVotes = useMemo(() => {
@@ -143,58 +139,31 @@ export default function App() {
   }, [coffees]);
 
   return (
-    <div className="min-h-screen bg-[#111822] text-[#f7f3ed] font-sans antialiased selection:bg-[#0284c7] selection:text-white flex flex-col justify-between py-6 px-3 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#181310] via-[#120e0b] to-[#0c0907] text-[#f7f3ed] font-sans antialiased selection:bg-[#0284c7] selection:text-white flex flex-col justify-between py-6 px-3 sm:px-6">
       
-      {/* Top Navbar */}
-      <header className="max-w-6xl w-full mx-auto flex items-center justify-between pb-5 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#0284c7] flex items-center justify-center text-white font-black shadow-md shadow-[#0284c7]/30">
+      {/* Top Ambient Bar */}
+      <header className="max-w-2xl w-full mx-auto flex items-center justify-between pb-4 mb-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-[#0284c7] flex items-center justify-center text-white font-black shadow-md shadow-[#0284c7]/30">
             ☕
           </div>
           <div>
-            <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-2">
               <span>The Great Coffee</span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
-                Live Rating System
+                Official App
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400">Database updates & backend logic handling</p>
+            <p className="text-[11px] text-[#9c8978]">Specialty Coffee Community Ratings</p>
           </div>
         </div>
 
-        {/* Global Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Storage Mode Badge */}
-          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
-            storageMode === 'backend'
-              ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300'
-              : 'bg-amber-950/60 border-amber-700/60 text-amber-300'
-          }`}>
-            <Database className="w-3.5 h-3.5" />
-            <span className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${storageMode === 'backend' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-              {storageMode === 'backend' ? 'SQLite Backend' : 'Persistent DB (GH Pages)'}
-            </span>
-          </div>
-
-          {/* Toggle Flow Inspector (Mobile/Desktop) */}
-          <button
-            onClick={() => setShowInspector(!showInspector)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-              showInspector
-                ? 'bg-sky-600 text-white border-sky-500'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-            }`}
-            title="Toggle Live Backend Architecture Flow"
-          >
-            <Code2 className="w-4 h-4" />
-            <span className="hidden md:inline">Flow Diagram</span>
-          </button>
-
+        {/* Top Controls */}
+        <div className="flex items-center gap-2">
           {/* Sound Toggle */}
           <button
             onClick={handleSoundToggle}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-[#241a14] hover:bg-[#2e2119] border border-[#3d2b20] text-[#c7b5a5] hover:text-white transition-all cursor-pointer"
             title={soundOn ? 'Sound feedback ON' : 'Sound feedback OFF'}
           >
             {soundOn ? <Volume2 className="w-4 h-4 text-sky-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
@@ -203,8 +172,8 @@ export default function App() {
           {/* Reset DB */}
           <button
             onClick={handleResetDb}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer"
-            title="Reset database to default seed"
+            className="p-2 rounded-xl bg-[#241a14] hover:bg-[#2e2119] border border-[#3d2b20] text-[#9c8978] hover:text-white transition-all cursor-pointer"
+            title="Reset votes to initial tutorial state"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -215,60 +184,63 @@ export default function App() {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold text-xs shadow-md shadow-[#0284c7]/30 transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span className="hidden sm:inline">Add Item</span>
+            <span>Add Item</span>
           </button>
         </div>
       </header>
 
-      {/* Main Experience Layout */}
-      <main className="max-w-6xl w-full mx-auto my-6 flex flex-col lg:flex-row items-start justify-center gap-8">
+      {/* Main Tablet Centerpiece */}
+      <main className="w-full max-w-2xl mx-auto my-2">
         
-        {/* Tablet / Application Frame (Matching Reference Photo) */}
-        <div className="w-full max-w-xl mx-auto rounded-[32px] bg-[#1a232f] p-3 sm:p-4 shadow-2xl border-4 border-[#2b394a] relative">
+        {/* Tablet Frame */}
+        <div className="rounded-[36px] bg-[#1d2735] p-3.5 sm:p-5 shadow-2xl shadow-black/80 border-4 border-[#2b394d] relative">
           
-          {/* Inner Tablet Shell */}
-          <div className="rounded-[24px] bg-[#faf6ee] overflow-hidden shadow-inner flex flex-col border border-[#ded5c7]">
+          {/* Inner Tablet Screen */}
+          <div className="rounded-[26px] bg-[#faf6ee] overflow-hidden shadow-inner flex flex-col border border-[#ded5c7]">
             
-            {/* Tablet Header: "THE GREAT COFFEE Rating App" */}
-            <div className="bg-gradient-to-b from-[#1b3438] to-[#162a2d] py-5 px-6 text-center text-white relative border-b-2 border-[#102022]">
+            {/* Header: "THE GREAT COFFEE Rating App" */}
+            <div className="bg-gradient-to-b from-[#1c383d] via-[#182f33] to-[#142629] py-6 px-6 text-center text-white relative border-b-2 border-[#0e1a1c]">
+              
               {/* Steaming Coffee Cup Icon */}
-              <div className="w-9 h-9 mx-auto mb-1.5 rounded-full bg-[#27464c] border border-[#3b636a] flex items-center justify-center text-amber-300 shadow-sm">
-                <Coffee className="w-5 h-5 text-[#f4d19b]" />
+              <div className="w-11 h-11 mx-auto mb-2 rounded-2xl bg-[#27464c] border border-[#3b636a] flex items-center justify-center text-amber-300 shadow-md">
+                <Coffee className="w-6 h-6 text-[#f4d19b]" />
               </div>
 
               {/* Title */}
-              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-[0.2em] text-[#faf6ee] font-sans">
+              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-[0.22em] text-[#faf6ee] font-sans">
                 The Great Coffee
               </h2>
 
               {/* Subtitle in Italian script/serif cursive */}
-              <p className="text-xs sm:text-sm text-[#d8a774] italic font-serif tracking-wider -mt-0.5">
+              <p className="text-sm sm:text-base text-[#d8a774] italic font-serif tracking-wider mt-0.5">
                 — Rating App —
               </p>
 
               {/* Total votes pill */}
-              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-[11px] text-[#f4d19b]">
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>Total Votes Cast: <strong>{totalVotes.toLocaleString()}</strong></span>
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs text-[#f4d19b] font-medium shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Total Community Votes: <strong className="text-white font-bold">{totalVotes.toLocaleString()}</strong></span>
               </div>
             </div>
 
-            {/* Quick Filter Pills & Search */}
-            <div className="p-3 bg-[#f3ede1] border-b border-[#e2d6c3] flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+            {/* Category Filter Pills & Search */}
+            <div className="p-3.5 bg-[#f3ede1] border-b border-[#e2d6c3] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              
+              {/* Categories */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                 {[
-                  { id: 'all', label: 'All Items' },
-                  { id: 'beans', label: 'Single Origin' },
+                  { id: 'all', label: 'All Coffees' },
+                  { id: 'beans', label: 'Whole Beans' },
                   { id: 'cold_brew', label: 'Cold Brew' },
-                  { id: 'latte', label: 'Espresso & Latte' },
+                  { id: 'latte', label: 'Lattes & Espresso' },
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setSelectedCategory(tab.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       selectedCategory === tab.id
-                        ? 'bg-[#1b3438] text-white shadow-sm'
-                        : 'bg-white/70 text-[#675445] hover:bg-white hover:text-[#231b14] border border-[#ded4c3]'
+                        ? 'bg-[#1c383d] text-white shadow-sm'
+                        : 'bg-white/80 text-[#675445] hover:bg-white hover:text-[#231b14] border border-[#ded4c3]'
                     }`}
                   >
                     {tab.label}
@@ -276,24 +248,35 @@ export default function App() {
                 ))}
               </div>
 
-              {/* Search input */}
-              <div className="relative w-full sm:w-44">
-                <Search className="w-3.5 h-3.5 text-[#8c7b6d] absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Filter coffee..."
-                  className="w-full pl-8 pr-3 py-1 text-xs rounded-lg bg-white border border-[#ded4c3] text-[#231b14] placeholder-[#9c8b7e] outline-none focus:border-[#0284c7]"
-                />
+              {/* Search & Sort */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 sm:w-48">
+                  <Search className="w-3.5 h-3.5 text-[#8c7b6d] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search menu..."
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white border border-[#ded4c3] text-[#231b14] placeholder-[#9c8b7e] outline-none focus:border-[#0284c7]"
+                  />
+                </div>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white border border-[#ded4c3] text-[#423429] outline-none cursor-pointer"
+                >
+                  <option value="votes">🔥 Most Votes</option>
+                  <option value="name">🔤 Name (A-Z)</option>
+                </select>
               </div>
             </div>
 
-            {/* List of Coffees */}
-            <div className="p-3 sm:p-4 space-y-3 max-h-[600px] overflow-y-auto">
+            {/* List of Coffee Row Cards (The Core Experience) */}
+            <div className="p-3.5 sm:p-5 space-y-3.5 max-h-[640px] overflow-y-auto">
               {loading ? (
-                <div className="py-16 text-center text-[#736353]">
-                  <p className="text-xs font-semibold">Loading coffee database...</p>
+                <div className="py-20 text-center text-[#736353]">
+                  <p className="text-xs font-semibold">Loading freshly brewed coffees...</p>
                 </div>
               ) : filteredCoffees.length > 0 ? (
                 filteredCoffees.map(coffee => (
@@ -302,12 +285,12 @@ export default function App() {
                     coffee={coffee}
                     onVote={handleVote}
                     onOpenDetails={(c) => setActiveModalCoffee(c)}
-                    isSelected={lastVotedCoffee?.id === coffee.id}
+                    isSelected={selectedCoffeeId === coffee.id}
                   />
                 ))
               ) : (
-                <div className="text-center py-12 text-[#736353]">
-                  <p className="text-xs font-bold">No coffees match your filter.</p>
+                <div className="text-center py-16 text-[#736353]">
+                  <p className="text-sm font-bold">No coffees found in this category.</p>
                   <button
                     onClick={() => { setSelectedCategory('all'); setSearchTerm(''); }}
                     className="mt-2 text-xs text-[#0284c7] underline font-semibold"
@@ -318,48 +301,46 @@ export default function App() {
               )}
             </div>
 
-            {/* Tablet Footer bar */}
-            <div className="p-2.5 bg-[#eae2d3] border-t border-[#ded4c3] text-center text-[11px] text-[#6e5d4e] flex items-center justify-between px-4">
-              <span>Click <strong className="text-[#0284c7] font-black">(+)</strong> to register a live database vote</span>
-              <span className="font-bold text-[#1b3438]">{filteredCoffees.length} items loaded</span>
+            {/* Tablet Bottom Status Bar */}
+            <div className="p-3 bg-[#eae2d3] border-t border-[#ded4c3] text-[11px] text-[#6e5d4e] flex items-center justify-between px-5">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Database Sync: <strong>Active</strong></span>
+              </span>
+              <span className="font-semibold text-[#1c383d]">
+                Showing {filteredCoffees.length} specialty items
+              </span>
             </div>
 
           </div>
 
         </div>
 
-        {/* Right: Architecture Flow Inspector (Illustrated in Reference Photo) */}
-        {showInspector && (
-          <FlowInspector
-            lastVotedCoffee={lastVotedCoffee}
-            isVoting={isVotingState}
-          />
-        )}
-
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-6xl w-full mx-auto pt-4 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <p>The Great Coffee Rating Application • Database Updates & Backend Logic Handling</p>
-        <p className="flex items-center gap-1.5 text-slate-400">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline" />
-          <span>Deployed on GitHub Pages</span>
+      {/* Subtle Bottom Footer */}
+      <footer className="max-w-2xl w-full mx-auto pt-4 text-center text-xs text-[#827162] flex items-center justify-between">
+        <p>The Great Coffee • Community Cupping Platform</p>
+        <p className="text-[11px] text-[#0284c7] font-semibold">
+          Click (+) on any coffee to vote!
         </p>
       </footer>
 
-      {/* Modals */}
+      {/* Detail Modal */}
       <CoffeeDetailModal
         coffee={activeModalCoffee}
         onClose={() => setActiveModalCoffee(null)}
         onVote={handleVote}
       />
 
+      {/* Add Coffee Modal */}
       <AddCoffeeModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddCoffee}
       />
 
+      {/* Toast Notification */}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
