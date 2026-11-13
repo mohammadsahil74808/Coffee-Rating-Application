@@ -8,7 +8,8 @@
     "dev": "node dev.js",
     "server": "node server/server.js",
     "client": "npm --prefix client run dev",
-    "build": "npm --prefix client run build",
+    "build": "cd client && npm run build",
+    "deploy": "cd client && npm run build && cd .. && npx gh-pages -d client/dist",
     "test": "node server/test-api.js",
     "preview": "npm --prefix client run preview"
   },
@@ -23,6 +24,8 @@
     "github-pages"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
 }
-
