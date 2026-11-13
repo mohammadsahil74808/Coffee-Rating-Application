@@ -3,17 +3,18 @@
 // 1. Backend Mode: Connects to Express + SQLite API at /api/*
 // 2. GitHub Pages / In-Browser Mode: Persists in localStorage with atomic updates
 
-const LOCAL_STORAGE_KEY = 'roastrank_coffees_db_v1';
-const HISTORY_STORAGE_KEY = 'roastrank_vote_history_v1';
+const LOCAL_STORAGE_KEY = 'the_great_coffee_db_v2';
+const HISTORY_STORAGE_KEY = 'the_great_coffee_history_v2';
 
 export const SEED_COFFEES = [
   {
     id: 1,
-    name: 'Ethiopian Yirgacheffe G1',
+    name: 'Ethiopian Yirgacheffe',
     roaster: 'Artisanal Roastery Co.',
     origin: 'Yirgacheffe, Ethiopia',
+    category: 'beans',
     roast_level: 'Light',
-    votes: 42,
+    votes: 125,
     cupping_score: 91.5,
     acidity: 9,
     sweetness: 8,
@@ -22,138 +23,144 @@ export const SEED_COFFEES = [
     flavor_notes: 'Jasmine, Bergamot, Meyer Lemon, Wild Blossom Honey',
     process: 'Washed',
     altitude: '2,050m MASL',
-    image_url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=800&auto=format&fit=crop',
-    description: 'Iconic Ethiopian heirloom varieties harvested at high altitudes. Vibrant citrus blossoms, crisp bergamot tea finish, and unmatched floral clarity.'
+    icon_type: 'beans',
+    description: 'Ethiopian Yirgacheffe, heirloom varietals with delicate citrus blossom and bergamot.'
   },
   {
     id: 2,
-    name: 'Panama Geisha Esmeralda',
-    roaster: 'Panama Highlands Reserve',
-    origin: 'Boquete, Panama',
-    roast_level: 'Light',
-    votes: 68,
-    cupping_score: 94.0,
-    acidity: 8,
-    sweetness: 10,
-    body: 7,
-    aroma: 10,
-    flavor_notes: 'White Peach, Jasmine, Passionfruit, Candied Mandarin',
-    process: 'Natural Anaerobic',
-    altitude: '1,850m MASL',
-    image_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=800&auto=format&fit=crop',
-    description: 'The pinnacle of specialty coffee. Rare Geisha lot delivering silk-like mouthfeel, ethereal white florality, and luscious tropical stone fruit sweetness.'
-  },
-  {
-    id: 3,
-    name: 'Colombian Huila Supremo',
-    roaster: 'Andean Slope Roasters',
-    origin: 'Huila, Colombia',
-    roast_level: 'Medium',
-    votes: 35,
-    cupping_score: 88.5,
-    acidity: 7,
-    sweetness: 9,
-    body: 8,
-    aroma: 8,
-    flavor_notes: 'Dulce de Leche, Red Fuji Apple, Roasted Pecan, Milk Chocolate',
-    process: 'Washed',
-    altitude: '1,750m MASL',
-    image_url: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=800&auto=format&fit=crop',
-    description: 'Crowd-favorite balanced Colombian lot. Rich buttery caramel sweetness complemented by crisp red apple juiciness and a lingering chocolate truffle finish.'
-  },
-  {
-    id: 4,
-    name: 'Costa Rican Tarrazú Honey',
-    roaster: 'Pura Vida Microlots',
-    origin: 'Tarrazú Valley, Costa Rica',
-    roast_level: 'Medium',
-    votes: 29,
-    cupping_score: 89.2,
-    acidity: 7,
-    sweetness: 9,
-    body: 8,
-    aroma: 8,
-    flavor_notes: 'Yellow Plum, Golden Cane Sugar, Toasted Almond, Vanilla Cream',
-    process: 'Yellow Honey',
-    altitude: '1,900m MASL',
-    image_url: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=800&auto=format&fit=crop',
-    description: 'Processed with mucilage intact during sun drying, producing round velvety sweetness, stone fruit juiciness, and a creamy toasted almond aroma.'
-  },
-  {
-    id: 5,
-    name: 'Guatemala Fuego Antigua',
-    roaster: 'Volcanic Bean Works',
-    origin: 'Antigua Valley, Guatemala',
-    roast_level: 'Medium',
-    votes: 24,
-    cupping_score: 87.8,
-    acidity: 6,
-    sweetness: 8,
-    body: 9,
-    aroma: 8,
-    flavor_notes: 'Dark Belgian Chocolate, Cinnamon Bark, Toasted Hazelnut, Brown Butter',
-    process: 'Washed',
-    altitude: '1,600m MASL',
-    image_url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop',
-    description: 'Grown in mineral-rich volcanic soil surrounded by volcanoes Agua, Acatenango, and Fuego. Deep chocolate fudge body with comforting warming spices.'
-  },
-  {
-    id: 6,
-    name: 'Sumatra Mandheling Reserve',
+    name: 'Sumatra Mandheling',
     roaster: 'Equatorial Archipelago',
     origin: 'Lake Toba, North Sumatra',
+    category: 'beans',
     roast_level: 'Dark',
-    votes: 31,
-    cupping_score: 86.5,
+    votes: 150,
+    cupping_score: 87.5,
     acidity: 4,
     sweetness: 7,
     body: 10,
     aroma: 8,
-    flavor_notes: 'Cedarwood, Molasses, 85% Dark Chocolate, Earthy Clove',
-    process: 'Giling Basah (Wet-Hulled)',
+    flavor_notes: 'Cedarwood, Molasses, 85% Dark Chocolate, Earthy Spice',
+    process: 'Wet-Hulled (Giling Basah)',
     altitude: '1,450m MASL',
-    image_url: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?q=80&w=800&auto=format&fit=crop',
-    description: 'Traditional Indonesian wet-hulled preparation yielding an ultra-dense syrupy body, deep forest cedar tones, and bold bittersweet chocolate finish.'
+    icon_type: 'beans',
+    description: 'Sumatra Mandheling, volcanic soil roast with cedarwood, dark chocolate, and comforting spice.'
+  },
+  {
+    id: 3,
+    name: 'Cold Brew Nitro',
+    roaster: 'Draft Brew Lab',
+    origin: 'Huila & Antioquia blend',
+    category: 'cold_brew',
+    roast_level: 'Medium',
+    votes: 120,
+    cupping_score: 89.0,
+    acidity: 5,
+    sweetness: 9,
+    body: 9,
+    aroma: 8,
+    flavor_notes: 'Creamy Stout, Dark Cocoa, Sweet Molasses, Velvety Foam',
+    process: '18-Hour Nitrogen Infused',
+    altitude: '1,800m MASL',
+    icon_type: 'cold_brew',
+    description: 'Cold Brew Nitro is slow-steeped for 18 hours and charged with pure nitrogen for a creamy cascade.'
+  },
+  {
+    id: 4,
+    name: 'Vanilla Latte',
+    roaster: 'Velvet Espresso Bar',
+    origin: 'Guatemala & Colombia Reserve',
+    category: 'latte',
+    roast_level: 'Medium',
+    votes: 125,
+    cupping_score: 88.0,
+    acidity: 5,
+    sweetness: 9,
+    body: 8,
+    aroma: 9,
+    flavor_notes: 'Madagascar Vanilla, Steamed Oat Milk, Brown Sugar Crema',
+    process: 'Double Shot Espresso + Microfoam',
+    altitude: '1,700m MASL',
+    icon_type: 'latte',
+    description: 'Vanilla Latte handcrafted with double espresso, silky microfoam, and natural Madagascar bourbon vanilla.'
+  },
+  {
+    id: 5,
+    name: 'Mexican Chiapas',
+    roaster: 'Sierra Madre Microlots',
+    origin: 'Chiapas, Mexico',
+    category: 'beans',
+    roast_level: 'Medium',
+    votes: 120,
+    cupping_score: 88.5,
+    acidity: 6,
+    sweetness: 8,
+    body: 7,
+    aroma: 8,
+    flavor_notes: 'Milk Chocolate, Roasted Pecan, Crisp Red Apple, Brown Butter',
+    process: 'Washed',
+    altitude: '1,650m MASL',
+    icon_type: 'beans',
+    description: 'Mexican Chiapas delivers a comforting cup of milk chocolate, toasted almonds, and sweet red apple crisp.'
+  },
+  {
+    id: 6,
+    name: 'Cold Brew',
+    roaster: 'Slow Drip Roasters',
+    origin: 'Bourbon & Typica single-origin',
+    category: 'cold_brew',
+    roast_level: 'Medium-Dark',
+    votes: 50,
+    cupping_score: 86.5,
+    acidity: 4,
+    sweetness: 8,
+    body: 8,
+    aroma: 7,
+    flavor_notes: 'Bittersweet Cocoa, Toasted Walnut, Black Cherry',
+    process: '24-Hour Cold Immersion',
+    altitude: '1,600m MASL',
+    icon_type: 'cold_brew',
+    description: 'Traditional slow-filtered cold brew steeped in chilled spring water for low acidity and natural sweetness.'
   },
   {
     id: 7,
-    name: 'Kenya Nyeri Peaberry AA',
-    roaster: 'Rift Valley Specialty',
-    origin: 'Nyeri County, Kenya',
+    name: 'Panama Geisha Esmeralda',
+    roaster: 'Highlands Micro-Lot',
+    origin: 'Boquete, Panama',
+    category: 'beans',
     roast_level: 'Light',
-    votes: 49,
-    cupping_score: 92.0,
-    acidity: 10,
-    sweetness: 8,
+    votes: 165,
+    cupping_score: 94.5,
+    acidity: 8,
+    sweetness: 10,
     body: 7,
-    aroma: 9,
-    flavor_notes: 'Blackcurrant Jam, Blood Orange, Cane Sugar, Winey Finish',
-    process: 'Double Washed',
-    altitude: '1,950m MASL',
-    image_url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop',
-    description: 'Rare round Peaberry beans bursting with vibrant blackcurrant brightness, juicy blood orange acidity, and a sparkling wine-like complexity.'
+    aroma: 10,
+    flavor_notes: 'White Peach, Jasmine Florals, Passionfruit, Candied Mandarin',
+    process: 'Natural Anaerobic',
+    altitude: '1,850m MASL',
+    icon_type: 'beans',
+    description: 'World-renowned Geisha variety known for ethereal jasmine fragrance, tropical fruits, and tea-like elegance.'
   },
   {
     id: 8,
-    name: 'Yemen Mocha Matari Terroir',
-    roaster: 'Heritage Silk Roasters',
-    origin: 'Bani Matar, Yemen',
+    name: 'Caramel Macchiato',
+    roaster: 'Artisan Dolce Works',
+    origin: 'Brazil Santos & Colombian Blend',
+    category: 'latte',
     roast_level: 'Medium',
-    votes: 38,
-    cupping_score: 90.0,
-    acidity: 6,
-    sweetness: 8,
-    body: 9,
+    votes: 95,
+    cupping_score: 87.0,
+    acidity: 4,
+    sweetness: 10,
+    body: 8,
     aroma: 9,
-    flavor_notes: 'Dried Black Fig, Cardamom, Cacao Nibs, Wild Leather',
-    process: 'Ancient Terrace Sun-Dried',
-    altitude: '2,200m MASL',
-    image_url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=800&auto=format&fit=crop',
-    description: 'From thousand-year-old stone terraces high in the Yemeni mountains. Deeply exotic cup with notes of wild dried figs, warm cardamom, and intense raw cocoa.'
+    flavor_notes: 'Salted Caramel, Steamed Vanilla Milk, Espresso Crema',
+    process: 'Marked Espresso over Steamed Milk',
+    altitude: '1,500m MASL',
+    icon_type: 'latte',
+    description: 'Freshly steamed milk with vanilla-infused syrup, marked with rich espresso shots and buttery caramel drizzle.'
   }
 ];
 
-// Helper to determine if backend is available
 let isBackendActive = false;
 let checkDone = false;
 
@@ -198,7 +205,6 @@ const saveLocalCoffees = (coffees) => {
 export const coffeeApi = {
   getStorageMode: () => (isBackendActive ? 'backend' : 'local'),
 
-  // Fetch all coffees
   getAll: async () => {
     if (!checkDone) {
       await checkBackendConnection();
@@ -217,14 +223,11 @@ export const coffeeApi = {
       }
     }
 
-    // LocalStorage fallback
     const coffees = getLocalCoffees();
-    // Sort by votes desc
     coffees.sort((a, b) => b.votes - a.votes);
     return { data: coffees, source: 'local' };
   },
 
-  // Cast vote for coffee
   vote: async (id) => {
     if (isBackendActive) {
       try {
@@ -242,7 +245,6 @@ export const coffeeApi = {
       }
     }
 
-    // LocalStorage fallback
     const coffees = getLocalCoffees();
     const index = coffees.findIndex(c => c.id === id);
     if (index === -1) {
@@ -252,7 +254,6 @@ export const coffeeApi = {
     coffees[index].votes += 1;
     saveLocalCoffees(coffees);
 
-    // Save vote log
     const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
     history.push({ coffeeId: id, timestamp: new Date().toISOString() });
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
@@ -260,7 +261,6 @@ export const coffeeApi = {
     return { data: coffees[index], source: 'local' };
   },
 
-  // Add new coffee
   addCoffee: async (newCoffee) => {
     if (isBackendActive) {
       try {
@@ -279,7 +279,6 @@ export const coffeeApi = {
       }
     }
 
-    // LocalStorage fallback
     const coffees = getLocalCoffees();
     const maxId = coffees.reduce((max, c) => Math.max(max, c.id || 0), 0);
     const created = {
@@ -291,6 +290,7 @@ export const coffeeApi = {
       sweetness: parseInt(newCoffee.sweetness, 10) || 8,
       body: parseInt(newCoffee.body, 10) || 7,
       aroma: parseInt(newCoffee.aroma, 10) || 8,
+      icon_type: newCoffee.icon_type || 'beans',
       created_at: new Date().toISOString()
     };
     coffees.push(created);
@@ -298,7 +298,6 @@ export const coffeeApi = {
     return { data: created, source: 'local' };
   },
 
-  // Get aggregated stats
   getStats: async () => {
     if (isBackendActive) {
       try {
@@ -312,33 +311,21 @@ export const coffeeApi = {
       }
     }
 
-    // LocalStorage fallback
     const coffees = getLocalCoffees();
     const totalVotes = coffees.reduce((sum, c) => sum + (c.votes || 0), 0);
     const sorted = [...coffees].sort((a, b) => (b.votes || 0) - (a.votes || 0));
     const topCoffee = sorted[0] || null;
 
-    // Roast breakdown
-    const roastMap = {};
-    coffees.forEach(c => {
-      const r = c.roast_level || 'Medium';
-      if (!roastMap[r]) roastMap[r] = { roast_level: r, count: 0, votes: 0 };
-      roastMap[r].count += 1;
-      roastMap[r].votes += (c.votes || 0);
-    });
-
     return {
       data: {
         totalVotes,
         totalCoffees: coffees.length,
-        topCoffee,
-        roastBreakdown: Object.values(roastMap)
+        topCoffee
       },
       source: 'local'
     };
   },
 
-  // Reset database back to seed
   reset: async () => {
     if (isBackendActive) {
       try {
@@ -356,4 +343,3 @@ export const coffeeApi = {
     return { success: true, source: 'local' };
   }
 };
-
